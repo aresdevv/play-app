@@ -13,5 +13,5 @@ public interface PlatziPlayAiService {
             (esto va salir en pantalla asi que sea directo el saludo, 
             sin opciones, tú elige la mejor, no me digas *esta es una opcion*, solo has el saludo
             """)
-    String generateGreeting(@Value("plataform") String plataform );
+    String generateGreeting(String plataform );
 }
