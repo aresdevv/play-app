@@ -8,4 +8,5 @@ import java.util.List;
 public interface MovieRepository {
     List<MovieDto> getAll();
     MovieDto getById(Long id);
+    MovieDto save(MovieDto movieDto);
 }

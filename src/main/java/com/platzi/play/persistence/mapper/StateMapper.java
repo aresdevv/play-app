@@ -9,6 +9,11 @@ public class StateMapper {
         if (estado == null) return false;
         return "D".equalsIgnoreCase(estado);
     }
+
+    @Named("booleanToState")
+    public static String booleanToState(boolean available) {
+        return available ? "D" : "N";
+    }
 }
 
 
