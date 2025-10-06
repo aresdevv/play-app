@@ -1,6 +1,7 @@
     package com.platzi.play.web.controller;
 
     import com.platzi.play.domain.dto.MovieDto;
+    import com.platzi.play.domain.dto.UpdateMovieDto;
     import com.platzi.play.domain.service.MovieService;
     import org.springframework.http.HttpStatus;
     import org.springframework.http.ResponseEntity;
@@ -41,4 +42,12 @@
             MovieDto movie = this.movieService.save(movieDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(movie);
         }
+
+        @PutMapping("/{id}")
+        public ResponseEntity<MovieDto> update(@PathVariable Long id, @RequestBody UpdateMovieDto movieDto){
+
+            return ResponseEntity.ok(this.movieService.update(id,movieDto))     ;
+        }
+
+
     }
