@@ -45,8 +45,13 @@
 
         @PutMapping("/{id}")
         public ResponseEntity<MovieDto> update(@PathVariable Long id, @RequestBody UpdateMovieDto movieDto){
+            return ResponseEntity.ok(this.movieService.update(id,movieDto));
+        }
 
-            return ResponseEntity.ok(this.movieService.update(id,movieDto))     ;
+        @DeleteMapping("/{id}")
+        public ResponseEntity<Void> delete(@PathVariable Long id){
+            this.movieService.delete(id);
+            return ResponseEntity.noContent().build();
         }
 
 

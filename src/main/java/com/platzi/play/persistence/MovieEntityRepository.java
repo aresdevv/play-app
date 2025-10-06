@@ -57,4 +57,9 @@ public class MovieEntityRepository implements MovieRepository {
     public MovieDto update(UpdateMovieDto movieDto) {
         return null;
     }
+
+    @Override
+    public void delete(Long id) {
+        this.crudMovieEntity.deleteById(id);
+    }
 }
