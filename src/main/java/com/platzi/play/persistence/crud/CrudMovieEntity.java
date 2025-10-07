@@ -6,4 +6,6 @@ import org.springframework.data.repository.CrudRepository;
 
 public interface CrudMovieEntity extends JpaRepository<MovieEntity, Long> {
 
+    MovieEntity findFirstByTitulo(String titulo);
+
 }
