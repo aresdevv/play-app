@@ -26,7 +26,7 @@ public class MovieEntityRepository implements MovieRepository {
     }
 
     @Override
-    public List<MovieDto> getAll() {i
+    public List<MovieDto> getAll() {
         return movieMapper.toDtoList(crudMovieEntity.findAll());
     }
 
@@ -76,6 +76,12 @@ public class MovieEntityRepository implements MovieRepository {
 
     @Override
     public void delete(Long id) {
+        // Verificar que la película existe antes de eliminar
+        MovieEntity movieEntity = crudMovieEntity.findById(id).orElse(null);
+        if (movieEntity == null) {
+            throw new MovieNotFoundException(id);
+        }
+        
         this.crudMovieEntity.deleteById(id);
     }
 }
