@@ -3,6 +3,8 @@ package com.platzi.play.persistence;
 import com.platzi.play.domain.dto.MovieDto;
 import com.platzi.play.domain.dto.UpdateMovieDto;
 import com.platzi.play.domain.exception.MovieAlreadyException;
+import com.platzi.play.domain.exception.MovieNotFoundException;
+import com.platzi.play.domain.exception.MovieTitleAlreadyExistsException;
 import com.platzi.play.domain.repository.MovieRepository;
 import com.platzi.play.persistence.crud.CrudMovieEntity;
 import com.platzi.play.persistence.entity.MovieEntity;
@@ -24,7 +26,7 @@ public class MovieEntityRepository implements MovieRepository {
     }
 
     @Override
-    public List<MovieDto> getAll() {
+    public List<MovieDto> getAll() {i
         return movieMapper.toDtoList(crudMovieEntity.findAll());
     }
 
@@ -47,11 +49,21 @@ public class MovieEntityRepository implements MovieRepository {
 
     @Override
     public MovieDto update(Long id, UpdateMovieDto updateMovieDto) {
+        // 1. Verificar que la película existe
         MovieEntity movieEntity = crudMovieEntity.findById(id).orElse(null);
         if (movieEntity == null) {
-            return null;
+            throw new MovieNotFoundException(id);
         }
 
+        // 2. Si se está actualizando el título, verificar que no exista otra película con el mismo título
+        if (updateMovieDto.title() != null && !updateMovieDto.title().equals(movieEntity.getTitulo())) {
+            MovieEntity existingMovie = crudMovieEntity.findFirstByTitulo(updateMovieDto.title());
+            if (existingMovie != null && !existingMovie.getId().equals(id)) {
+                throw new MovieTitleAlreadyExistsException(updateMovieDto.title(), id);
+            }
+        }
+
+        // 3. Actualizar la entidad
         this.movieMapper.updateEntityFromDto(updateMovieDto, movieEntity);
 
         return this.movieMapper.toDto(this.crudMovieEntity.save(movieEntity));
