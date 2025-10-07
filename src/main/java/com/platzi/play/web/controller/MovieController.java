@@ -6,6 +6,7 @@
     import com.platzi.play.domain.service.MovieService;
     import com.platzi.play.domain.service.PlatziPlayAiService;
     import dev.langchain4j.service.UserMessage;
+    import jakarta.validation.Valid;
     import org.springframework.http.HttpStatus;
     import org.springframework.http.ResponseEntity;
     import org.springframework.web.bind.annotation.*;
@@ -34,7 +35,7 @@
         }
 
         @PostMapping("/suggest")
-        public ResponseEntity<String> generateMoviesSuggestion(@RequestBody SuggestRequestDto suggestRequestDto) {
+        public ResponseEntity<String> generateMoviesSuggestion(@Valid @RequestBody SuggestRequestDto suggestRequestDto) {
             return ResponseEntity.ok(this.aiService.generateMovieSuggestion(suggestRequestDto.userPreferences()));
         }
 
@@ -48,13 +49,13 @@
         }
 
         @PostMapping
-        public ResponseEntity<MovieDto> add(@RequestBody MovieDto movieDto){
+        public ResponseEntity<MovieDto> add(@Valid @RequestBody MovieDto movieDto){
             MovieDto movie = this.movieService.save(movieDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(movie);
         }
 
         @PutMapping("/{id}")
-        public ResponseEntity<MovieDto> update(@PathVariable Long id, @RequestBody UpdateMovieDto movieDto){
+        public ResponseEntity<MovieDto> update(@PathVariable Long id, @RequestBody @Valid UpdateMovieDto movieDto){
             return ResponseEntity.ok(this.movieService.update(id,movieDto));
         }
 
