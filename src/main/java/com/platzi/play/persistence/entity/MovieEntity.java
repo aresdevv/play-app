@@ -1,4 +1,4 @@
-                    package com.platzi.play.persistence.entity;
+package com.platzi.play.persistence.entity;
 
 import jakarta.persistence.*;
 import lombok.Data;

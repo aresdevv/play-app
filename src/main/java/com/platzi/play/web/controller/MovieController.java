@@ -6,6 +6,11 @@
     import com.platzi.play.domain.service.MovieService;
     import com.platzi.play.domain.service.PlatziPlayAiService;
     import dev.langchain4j.service.UserMessage;
+    import io.swagger.v3.oas.annotations.Operation;
+    import io.swagger.v3.oas.annotations.Parameter;
+    import io.swagger.v3.oas.annotations.media.Content;
+    import io.swagger.v3.oas.annotations.responses.ApiResponse;
+    import io.swagger.v3.oas.annotations.tags.Tag;
     import jakarta.validation.Valid;
     import org.springframework.http.HttpStatus;
     import org.springframework.http.ResponseEntity;
@@ -15,6 +20,7 @@
 
     @RestController
     @RequestMapping("/movies")
+    @Tag(name = "Movies", description = "Operations about movies")
     public class MovieController{
 
         private final MovieService movieService;
@@ -26,6 +32,14 @@
         }
 
         @GetMapping
+        @Operation(
+                summary = "Obtener todas las películas",
+                description = "Retorna una lista de todas las películas disponibles en el sistema",
+                responses = {
+                        @ApiResponse(responseCode = "200", description = "Lista de películas obtenida exitosamente"),
+                        @ApiResponse(responseCode = "404", description = "No se encontraron películas", content = @Content)
+                }
+        )
         public ResponseEntity<List<MovieDto>> getAll() {
             List<MovieDto> movies = this.movieService.getAll();
             if (movies == null || movies.isEmpty()) {
@@ -35,12 +49,30 @@
         }
 
         @PostMapping("/suggest")
-        public ResponseEntity<String> generateMoviesSuggestion(@Valid @RequestBody SuggestRequestDto suggestRequestDto) {
+        @Operation(
+                summary = "Generar sugerencias de películas con IA",
+                description = "Utiliza inteligencia artificial para generar recomendaciones de películas basadas en las preferencias del usuario",
+                responses = {
+                        @ApiResponse(responseCode = "200", description = "Sugerencias generadas exitosamente"),
+                        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content)
+                }
+        )
+        public ResponseEntity<String> generateMoviesSuggestion(
+                @Parameter(description = "Preferencias del usuario para generar sugerencias")
+                @Valid @RequestBody SuggestRequestDto suggestRequestDto) {
             return ResponseEntity.ok(this.aiService.generateMovieSuggestion(suggestRequestDto.userPreferences()));
         }
 
         @GetMapping("/{id}")
-        public ResponseEntity<MovieDto> getById(@PathVariable Long id) {
+        @Operation(
+                summary = "Obtener una pelicula por su identificador",
+                description = "Retorna la pelicula que coincida con el identificador enviado",
+                responses = {
+                        @ApiResponse(responseCode = "200", description = "Pelicula encontrada"),
+                        @ApiResponse(responseCode = "404", description = "Pelicula no encontrada", content = @Content)
+                }
+        )
+        public ResponseEntity<MovieDto> getById(@Parameter(description = "Identificador de la pelicula a recuperar", example = "9") @PathVariable Long id) {
             MovieDto movieDto = this.movieService.getById(id);
             if(movieDto == null){
                 return ResponseEntity.notFound().build();
@@ -49,18 +81,52 @@
         }
 
         @PostMapping
-        public ResponseEntity<MovieDto> add(@Valid @RequestBody MovieDto movieDto){
+        @Operation(
+                summary = "Crear una nueva película",
+                description = "Agrega una nueva película al sistema",
+                responses = {
+                        @ApiResponse(responseCode = "201", description = "Película creada exitosamente"),
+                        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content),
+                        @ApiResponse(responseCode = "409", description = "La película ya existe", content = @Content)
+                }
+        )
+        public ResponseEntity<MovieDto> add(
+                @Parameter(description = "Datos de la película a crear")
+                @Valid @RequestBody MovieDto movieDto){
             MovieDto movie = this.movieService.save(movieDto);
             return ResponseEntity.status(HttpStatus.CREATED).body(movie);
         }
 
         @PutMapping("/{id}")
-        public ResponseEntity<MovieDto> update(@PathVariable Long id, @RequestBody @Valid UpdateMovieDto movieDto){
+        @Operation(
+                summary = "Actualizar una película existente",
+                description = "Actualiza los datos de una película existente en el sistema",
+                responses = {
+                        @ApiResponse(responseCode = "200", description = "Película actualizada exitosamente"),
+                        @ApiResponse(responseCode = "400", description = "Datos de entrada inválidos", content = @Content),
+                        @ApiResponse(responseCode = "404", description = "Película no encontrada", content = @Content)
+                }
+        )
+        public ResponseEntity<MovieDto> update(
+                @Parameter(description = "Identificador de la película a actualizar", example = "1")
+                @PathVariable Long id, 
+                @Parameter(description = "Datos actualizados de la película")
+                @RequestBody @Valid UpdateMovieDto movieDto){
             return ResponseEntity.ok(this.movieService.update(id,movieDto));
         }
 
         @DeleteMapping("/{id}")
-        public ResponseEntity<Void> delete(@PathVariable Long id){
+        @Operation(
+                summary = "Eliminar una película",
+                description = "Elimina una película del sistema por su identificador",
+                responses = {
+                        @ApiResponse(responseCode = "204", description = "Película eliminada exitosamente"),
+                        @ApiResponse(responseCode = "404", description = "Película no encontrada", content = @Content)
+                }
+        )
+        public ResponseEntity<Void> delete(
+                @Parameter(description = "Identificador de la película a eliminar", example = "1")
+                @PathVariable Long id){
             this.movieService.delete(id);
             return ResponseEntity.noContent().build();
         }
