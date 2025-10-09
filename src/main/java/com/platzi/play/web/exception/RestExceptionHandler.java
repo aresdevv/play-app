@@ -3,6 +3,8 @@ package com.platzi.play.web.exception;
 import com.platzi.play.domain.exception.MovieAlreadyException;
 import com.platzi.play.domain.exception.MovieNotFoundException;
 import com.platzi.play.domain.exception.MovieTitleAlreadyExistsException;
+import com.platzi.play.domain.exception.UserAlreadyExistsException;
+import com.platzi.play.domain.exception.UserNotFoundException;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -30,6 +32,18 @@ public class RestExceptionHandler {
     public ResponseEntity<Error> handleMovieTitleAlreadyExists(MovieTitleAlreadyExistsException exception) {
         Error error = new Error("movie-title-already-exists", exception.getMessage());
         return ResponseEntity.badRequest().body(error);
+    }
+
+    @ExceptionHandler(UserAlreadyExistsException.class)
+    public ResponseEntity<Error> handleUserAlreadyExists(UserAlreadyExistsException exception) {
+        Error error = new Error("user-already-exists", exception.getMessage());
+        return ResponseEntity.status(409).body(error);
+    }
+
+    @ExceptionHandler(UserNotFoundException.class)
+    public ResponseEntity<Error> handleUserNotFound(UserNotFoundException exception) {
+        Error error = new Error("user-not-found", exception.getMessage());
+        return ResponseEntity.status(404).body(error);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
