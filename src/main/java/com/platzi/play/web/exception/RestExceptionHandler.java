@@ -3,6 +3,9 @@ package com.platzi.play.web.exception;
 import com.platzi.play.domain.exception.MovieAlreadyException;
 import com.platzi.play.domain.exception.MovieNotFoundException;
 import com.platzi.play.domain.exception.MovieTitleAlreadyExistsException;
+import com.platzi.play.domain.exception.ReviewAlreadyExistsException;
+import com.platzi.play.domain.exception.ReviewNotFoundException;
+import com.platzi.play.domain.exception.UnauthorizedReviewAccessException;
 import com.platzi.play.domain.exception.UserAlreadyExistsException;
 import com.platzi.play.domain.exception.UserNotFoundException;
 import org.springframework.http.ResponseEntity;
@@ -44,6 +47,24 @@ public class RestExceptionHandler {
     public ResponseEntity<Error> handleUserNotFound(UserNotFoundException exception) {
         Error error = new Error("user-not-found", exception.getMessage());
         return ResponseEntity.status(404).body(error);
+    }
+
+    @ExceptionHandler(ReviewNotFoundException.class)
+    public ResponseEntity<Error> handleReviewNotFound(ReviewNotFoundException exception) {
+        Error error = new Error("review-not-found", exception.getMessage());
+        return ResponseEntity.status(404).body(error);
+    }
+
+    @ExceptionHandler(ReviewAlreadyExistsException.class)
+    public ResponseEntity<Error> handleReviewAlreadyExists(ReviewAlreadyExistsException exception) {
+        Error error = new Error("review-already-exists", exception.getMessage());
+        return ResponseEntity.status(409).body(error);
+    }
+
+    @ExceptionHandler(UnauthorizedReviewAccessException.class)
+    public ResponseEntity<Error> handleUnauthorizedReviewAccess(UnauthorizedReviewAccessException exception) {
+        Error error = new Error("unauthorized-review-access", exception.getMessage());
+        return ResponseEntity.status(403).body(error);
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
