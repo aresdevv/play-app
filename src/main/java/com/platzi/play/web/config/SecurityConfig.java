@@ -14,9 +14,11 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
@@ -29,9 +31,10 @@ import java.util.Arrays;
 public class SecurityConfig {
 
     private final UserEntityRepository userRepository;
+    private final CustomAuthenticationEntryPoint authenticationEntryPoint;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http, JwtAuthenticationFilter jwtAuthFilter) throws Exception {
         http
             .csrf(AbstractHttpConfigurer::disable)
             .cors(cors -> cors.configurationSource(corsConfigurationSource()))
@@ -45,15 +48,31 @@ public class SecurityConfig {
                 .requestMatchers("/api-docs/**").permitAll()
                 .requestMatchers("/swagger-resources/**").permitAll()
                 .requestMatchers("/webjars/**").permitAll()
-                .requestMatchers("/movies").permitAll() // Temporalmente público para testing
-                .requestMatchers("/movies/**").permitAll() // Temporalmente público para testing
+                
+                // Endpoints de películas - Solo lectura público, CRUD solo para ADMIN
+                .requestMatchers(HttpMethod.GET, "/movies", "/movies/**").permitAll()
+                .requestMatchers(HttpMethod.POST, "/movies").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/movies/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/movies/**").hasRole("ADMIN")
+                .requestMatchers(HttpMethod.POST, "/movies/suggest").authenticated() // Sugerencias requieren autenticación
+                
+                // Endpoints de reviews - Requieren autenticación
+                .requestMatchers(HttpMethod.GET, "/reviews/**").permitAll() // Lectura de reviews es pública
+                .requestMatchers(HttpMethod.POST, "/reviews").authenticated()
+                .requestMatchers(HttpMethod.PUT, "/reviews/**").authenticated()
+                .requestMatchers(HttpMethod.DELETE, "/reviews/**").authenticated()
+                
                 // Todos los demás endpoints requieren autenticación
                 .anyRequest().authenticated()
             )
             .sessionManagement(session -> session
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            .authenticationProvider(authenticationProvider());
+            .authenticationProvider(authenticationProvider())
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .exceptionHandling(exception -> exception
+                .authenticationEntryPoint(authenticationEntryPoint)
+            );
 
         return http.build();
     }
