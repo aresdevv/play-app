@@ -36,6 +36,12 @@ public record MovieDto(
         Double rating,
         
         @Schema(description = "Indica si la película está disponible para visualización", example = "true")
-        boolean available
+        boolean available,
+        
+        @Schema(description = "Calificación promedio basada en reviews de usuarios (1-5)", example = "4.5")
+        Double averageUserRating,
+        
+        @Schema(description = "Cantidad total de reviews de usuarios", example = "150")
+        Long reviewCount
 ) {
 }

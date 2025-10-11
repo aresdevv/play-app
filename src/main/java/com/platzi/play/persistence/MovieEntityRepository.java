@@ -7,6 +7,7 @@ import com.platzi.play.domain.exception.MovieNotFoundException;
 import com.platzi.play.domain.exception.MovieTitleAlreadyExistsException;
 import com.platzi.play.domain.repository.MovieRepository;
 import com.platzi.play.persistence.crud.CrudMovieEntity;
+import com.platzi.play.persistence.crud.CrudReviewEntity;
 import com.platzi.play.persistence.entity.MovieEntity;
 import com.platzi.play.persistence.mapper.MovieMapper;
 import org.springframework.stereotype.Repository;
@@ -18,22 +19,51 @@ import java.util.List;
 public class MovieEntityRepository implements MovieRepository {
 
     private final CrudMovieEntity crudMovieEntity;
+    private final CrudReviewEntity crudReviewEntity;
     private final MovieMapper movieMapper;
 
-    public MovieEntityRepository(CrudMovieEntity crudMovieEntity, MovieMapper movieMapper) {
+    public MovieEntityRepository(CrudMovieEntity crudMovieEntity, CrudReviewEntity crudReviewEntity, MovieMapper movieMapper) {
         this.crudMovieEntity = crudMovieEntity;
+        this.crudReviewEntity = crudReviewEntity;
         this.movieMapper = movieMapper;
     }
 
     @Override
     public List<MovieDto> getAll() {
-        return movieMapper.toDtoList(crudMovieEntity.findAll());
+        List<MovieDto> movies = movieMapper.toDtoList(crudMovieEntity.findAll());
+        return enrichMoviesWithReviewData(movies);
     }
 
     @Override
     public MovieDto getById(Long id) {
         MovieEntity movieEntity = crudMovieEntity.findById(id).orElse(null);
-        return movieMapper.toDto(movieEntity);
+        MovieDto movieDto = movieMapper.toDto(movieEntity);
+        return enrichMovieWithReviewData(movieDto);
+    }
+    
+    private List<MovieDto> enrichMoviesWithReviewData(List<MovieDto> movies) {
+        return movies.stream()
+                .map(this::enrichMovieWithReviewData)
+                .toList();
+    }
+    
+    private MovieDto enrichMovieWithReviewData(MovieDto movie) {
+        if (movie == null) return null;
+        
+        Double avgRating = crudReviewEntity.getAverageRatingByMovieId(movie.id());
+        long reviewCount = crudReviewEntity.countByMovieId(movie.id());
+        
+        return new MovieDto(
+                movie.id(),
+                movie.title(),
+                movie.duration(),
+                movie.genre(),
+                movie.releaseDate(),
+                movie.rating(),
+                movie.available(),
+                avgRating,
+                reviewCount
+        );
     }
 
     @Override
@@ -44,7 +74,8 @@ public class MovieEntityRepository implements MovieRepository {
 
         MovieEntity movieEntity = movieMapper.toEntity(movieDto);
         movieEntity.setEstado("D");
-        return this.movieMapper.toDto(crudMovieEntity.save(movieEntity));
+        MovieDto savedMovie = this.movieMapper.toDto(crudMovieEntity.save(movieEntity));
+        return enrichMovieWithReviewData(savedMovie);
     }
 
     @Override
@@ -66,7 +97,8 @@ public class MovieEntityRepository implements MovieRepository {
         // 3. Actualizar la entidad
         this.movieMapper.updateEntityFromDto(updateMovieDto, movieEntity);
 
-        return this.movieMapper.toDto(this.crudMovieEntity.save(movieEntity));
+        MovieDto updatedMovie = this.movieMapper.toDto(this.crudMovieEntity.save(movieEntity));
+        return enrichMovieWithReviewData(updatedMovie);
     }
 
     @Override
