@@ -14,7 +14,7 @@ import java.util.List;
 @Entity
 @Getter
 @Setter
-@Table(name = "platzi_play_usuarios")
+@Table(name = "users")
 public class UserEntity implements UserDetails {
 
     @Id
@@ -30,26 +30,25 @@ public class UserEntity implements UserDetails {
     @Column(nullable = false, length = 255)
     private String password;
 
-    @Column(name = "nombre_completo", length = 150)
+    @Column(name = "full_name", length = 150)
     private String nombreCompleto;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private UserRole role = UserRole.USER;
 
-    @Column(name = "fecha_creacion", nullable = false)
+    @Column(name = "created_at", nullable = false)
     private LocalDateTime fechaCreacion;
 
-    @Column(name = "ultimo_acceso")
+    @Column(name = "last_access")
     private LocalDateTime ultimoAcceso;
 
-    @Column(name = "activo", nullable = false)
+    @Column(name = "active", nullable = false)
     private Boolean activo = true;
 
-    @Column(name = "email_verificado", nullable = false)
+    @Column(name = "email_verified", nullable = false)
     private Boolean emailVerificado = false;
 
-    // Implementación de UserDetails para Spring Security
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
         return List.of(new SimpleGrantedAuthority("ROLE_" + role.name()));
