@@ -5,9 +5,13 @@ PlayApp es una aplicación Spring Boot que permite gestionar películas y obtene
 ## 🚀 Características Actuales
 
 - ✅ **CRUD completo de películas** (Crear, Leer, Actualizar, Eliminar)
+- ✅ **Sistema híbrido** con TMDB + Base de datos local
+- ✅ **Importación automática** de películas desde TMDB
 - ✅ **Sistema de usuarios** con registro y autenticación
+- ✅ **Sistema de reviews** con calificaciones (1-5 estrellas)
 - ✅ **Autenticación JWT** para seguridad de la API
 - ✅ **Recomendaciones con IA** usando Google Gemini
+- ✅ **Integración con TMDB API** para información de películas
 - ✅ **API REST** con documentación OpenAPI/Swagger
 - ✅ **Base de datos PostgreSQL** con inicialización automática
 - ✅ **Despliegue en Render** con configuración de producción
@@ -21,9 +25,11 @@ PlayApp es una aplicación Spring Boot que permite gestionar películas y obtene
 - **Base de datos**: PostgreSQL
 - **Seguridad**: Spring Security, JWT
 - **IA**: Google Gemini (LangChain4j)
+- **APIs Externas**: TMDB (The Movie Database)
 - **Documentación**: OpenAPI 3 / Swagger UI
 - **Mapeo**: MapStruct
 - **Validación**: Bean Validation
+- **Arquitectura**: Sistema Híbrido (API + BD Local)
 - **Despliegue**: Docker, Render
 - **Build**: Gradle
 
@@ -55,12 +61,23 @@ docker-compose up -d
 3. **Configurar variables de entorno**
 ```bash
 # En application-dev.properties
+
+# API Key de Google Gemini
 langchain4j.google-ai-gemini.chat-model.api-key=TU_API_KEY_AQUI
+
+# API Key de TMDB
+tmdb.api.key=TU_TMDB_API_KEY_AQUI
 ```
 
 4. **Ejecutar la aplicación**
 ```bash
 ./gradlew bootRun
+```
+
+5. **Ejecutar migración de BD (solo si ya tienes BD existente)**
+```sql
+-- Desde psql o tu cliente PostgreSQL
+\i src/main/resources/migration-tmdb-fields.sql
 ```
 
 ### Producción (Render)
@@ -69,31 +86,91 @@ La aplicación está configurada para desplegarse automáticamente en Render cua
 
 ## 📚 API Endpoints
 
-### Películas
-- `GET /play-app/api/movies` - Obtener todas las películas
+### Películas (Base de Datos Local)
+- `GET /play-app/api/movies` - Obtener todas las películas guardadas
 - `GET /play-app/api/movies/{id}` - Obtener película por ID
-- `POST /play-app/api/movies` - Crear nueva película
+- `POST /play-app/api/movies` - Crear nueva película manualmente
 - `PUT /play-app/api/movies/{id}` - Actualizar película
 - `DELETE /play-app/api/movies/{id}` - Eliminar película
 - `POST /play-app/api/movies/suggest` - Generar recomendaciones con IA
+- `POST /play-app/api/movies/import-from-tmdb/{tmdbId}` - **NUEVO:** Importar película desde TMDB
+
+### TMDB (The Movie Database) 🎬
+- `GET /play-app/api/tmdb/search?query={titulo}&page={page}` - Buscar películas por título
+- `GET /play-app/api/tmdb/movie/{tmdbId}` - Obtener detalles completos de una película
+- `GET /play-app/api/tmdb/popular?page={page}` - Obtener películas populares
+- `GET /play-app/api/tmdb/top-rated?page={page}` - Obtener películas mejor calificadas
+- `GET /play-app/api/tmdb/now-playing?page={page}` - Obtener películas en cines
+- `GET /play-app/api/tmdb/upcoming?page={page}` - Obtener próximos estrenos
 
 ### Autenticación
 - `POST /play-app/api/auth/register` - Registrar nuevo usuario
 - `POST /play-app/api/auth/login` - Iniciar sesión
 - `GET /play-app/api/auth/me` - Obtener información del usuario actual
 
+
+### Usuarios (Gestión de Perfil) 👤
+- `GET /play-app/api/users/me` - **NUEVO:** Obtener perfil del usuario actual
+- `PUT /play-app/api/users/me` - **NUEVO:** Actualizar perfil (nombre completo, email)
+- `GET /play-app/api/users/me/reviews` - **NUEVO:** Obtener todas las reviews del usuario actual
+
+### Reviews (Calificaciones y Reseñas) ⭐
+- `POST /play-app/api/reviews` - Crear nueva review (requiere autenticación)
+- `PUT /play-app/api/reviews/{id}` - Actualizar review propia
+- `DELETE /play-app/api/reviews/{id}` - Eliminar review propia
+- `GET /play-app/api/reviews/{id}` - Obtener review por ID
+- `GET /play-app/api/reviews/movie/{movieId}` - Obtener todas las reviews de una película
+- `GET /play-app/api/reviews/user/{userId}` - Obtener todas las reviews de un usuario
+- `GET /play-app/api/reviews/user/{userId}/movie/{movieId}` - Obtener review específica de usuario para película
+- `GET /play-app/api/reviews/movie/{movieId}/average` - Obtener calificación promedio de película
+- `GET /play-app/api/reviews/movie/{movieId}/count` - Obtener cantidad de reviews de película
 ### Utilidades
 - `GET /play-app/api/hello` - Endpoint de prueba
 
 ### Documentación
 - `GET /play-app/api/swagger-ui.html` - Interfaz Swagger UI
 
+## 🔄 Sistema Híbrido TMDB + BD Local
+
+PlayApp implementa un **sistema híbrido** que combina:
+- **TMDB**: Exploración de millones de películas
+- **BD Local**: Almacenamiento selectivo de películas para reviews
+
+### Flujo de Uso
+
+```bash
+# 1. Usuario busca película en TMDB
+GET /play-app/api/tmdb/search?query=matrix
+
+# 2. Usuario quiere hacer review → Importa película automáticamente
+POST /play-app/api/movies/import-from-tmdb/603
+
+# 3. Sistema guarda película en BD local (si no existe)
+# 4. Usuario puede hacer review con FK válida
+POST /play-app/api/reviews
+{
+  "movieId": 123,  // ID de BD local (no TMDB ID)
+  "rating": 5,
+  "comment": "¡Excelente!"
+}
+```
+
+### Ventajas
+
+✅ Acceso a millones de películas (TMDB)  
+✅ Solo guardas lo que necesitas (BD local)  
+✅ Reviews con integridad referencial  
+✅ Más rápido (BD local > API externa)  
+✅ Funciona offline con películas importadas  
+
+📖 **Ver guía completa**: [SISTEMA_HIBRIDO.md](SISTEMA_HIBRIDO.md)
+
 ## 🎯 Próximas Mejoras
 
 ### 🎬 Funcionalidades Core de Películas
 
 #### Gestión Avanzada de Películas
-- [ ] **Sistema de calificaciones y reviews** (1-5 estrellas + comentarios)
+- ✅ **Sistema de calificaciones y reviews** (1-5 estrellas + comentarios)
 - [ ] **Favoritos y listas personalizadas** (Watchlist, "Vistas", "Por ver")
 - [ ] **Búsqueda avanzada** (por género, año, director, actor, calificación)
 - [ ] **Filtros y ordenamiento** (más populares, mejor calificadas, más recientes)
@@ -136,7 +213,7 @@ La aplicación está configurada para desplegarse automáticamente en Render cua
 ### 🌐 Integraciones Externas
 
 #### APIs de Películas
-- [ ] **TMDB (The Movie Database)** - Información completa de películas
+- ✅ **TMDB (The Movie Database)** - Información completa de películas
 - [ ] **OMDb API** - Metadatos adicionales
 - [ ] **JustWatch API** - Dónde ver cada película
 - [ ] **Rotten Tomatoes** - Críticas y calificaciones
@@ -179,15 +256,15 @@ La aplicación está configurada para desplegarse automáticamente en Render cua
 ### Fase 1 (Completada ✅)
 1. ✅ **Sistema de usuarios** con registro y autenticación JWT
 2. ✅ **Autenticación de usuarios** con Spring Security
-3. [ ] **Sistema de calificaciones** (1-5 estrellas)
-4. [ ] **Búsqueda básica** (por título, género)
-5. [ ] **Filtros simples** (género, año)
+3. ✅ **Sistema de calificaciones y reviews** (1-5 estrellas + comentarios)
+4. ✅ **Integración con TMDB** (búsqueda, importación)
+5. ✅ **Sistema híbrido** (TMDB + BD Local)
 
 ### Fase 2 (Próximas 2-4 semanas)
 1. **Sistema de favoritos** y listas personalizadas
 2. **Recomendaciones mejoradas** basadas en usuario
 3. **Frontend básico** (HTML/CSS/JS o React simple)
-4. **Integración con TMDB**
+4. ✅ **Integración con TMDB** (Completado)
 
 ### Fase 3 (2-3 meses)
 1. **Chatbot de IA**
@@ -244,6 +321,18 @@ docker run -p 8080:8080 play-app
 3. Commit tus cambios (`git commit -m 'Add some AmazingFeature'`)
 4. Push a la rama (`git push origin feature/AmazingFeature`)
 5. Abre un Pull Request
+
+## 📚 Documentación Adicional
+
+- 📖 [SISTEMA_HIBRIDO.md](SISTEMA_HIBRIDO.md) - Guía completa del sistema híbrido TMDB + BD Local
+- 🚀 [QUICK_START.md](QUICK_START.md) - Guía rápida de inicio en 5 minutos
+- 🔄 [COMO_FUNCIONA_IMPORTACION.md](COMO_FUNCIONA_IMPORTACION.md) - Cómo funciona el sistema de importación sin duplicados
+- 🎬 [TMDB_GUIA.md](TMDB_GUIA.md) - Guía de integración con TMDB API
+- 🐧 [GUIA_ARCH_LINUX.md](GUIA_ARCH_LINUX.md) - Guía específica para Arch Linux
+- 📋 [CHANGELOG_SISTEMA_HIBRIDO.md](CHANGELOG_SISTEMA_HIBRIDO.md) - Registro de cambios del sistema híbrido
+- 📝 [GUIA_POSTMAN.md](GUIA_POSTMAN.md) - Guía de uso con Postman
+- 🔐 [JWT_EXPLICACION_DETALLADA.md](JWT_EXPLICACION_DETALLADA.md) - Explicación del sistema JWT
+- 📊 [SISTEMA_REVIEWS_IMPLEMENTACION.md](SISTEMA_REVIEWS_IMPLEMENTACION.md) - Sistema de reviews implementado
 
 ## 📄 Licencia
 
