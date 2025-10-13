@@ -4,6 +4,7 @@ import com.platzi.play.domain.dto.MovieDto;
 import com.platzi.play.domain.dto.UpdateMovieDto;
 
 import java.util.List;
+import java.util.Optional;
 
 
 public interface MovieRepository {
@@ -14,4 +15,6 @@ public interface MovieRepository {
 
     MovieDto update(UpdateMovieDto movieDto);
     void delete(Long id);
+    
+    Optional<MovieDto> findByTmdbId(Long tmdbId);
 }

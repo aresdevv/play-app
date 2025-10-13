@@ -14,6 +14,7 @@ import org.springframework.stereotype.Repository;
 
 import java.math.BigDecimal;
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public class MovieEntityRepository implements MovieRepository {
@@ -41,6 +42,13 @@ public class MovieEntityRepository implements MovieRepository {
         return enrichMovieWithReviewData(movieDto);
     }
     
+    @Override
+    public Optional<MovieDto> findByTmdbId(Long tmdbId) {
+        return crudMovieEntity.findByTmdbId(tmdbId)
+                .map(movieMapper::toDto)
+                .map(this::enrichMovieWithReviewData);
+    }
+    
     private List<MovieDto> enrichMoviesWithReviewData(List<MovieDto> movies) {
         return movies.stream()
                 .map(this::enrichMovieWithReviewData)
@@ -62,39 +70,45 @@ public class MovieEntityRepository implements MovieRepository {
                 movie.rating(),
                 movie.available(),
                 avgRating,
-                reviewCount
+                reviewCount,
+                movie.tmdbId(),
+                movie.posterUrl(),
+                movie.backdropUrl(),
+                movie.overview(),
+                movie.originalTitle(),
+                movie.voteAverage(),
+                movie.voteCount(),
+                movie.popularity(),
+                movie.originalLanguage()
         );
     }
 
     @Override
     public MovieDto save(MovieDto movieDto) {
-        if(this.crudMovieEntity.findFirstByTitulo(movieDto.title()) != null){
+        if(this.crudMovieEntity.findFirstByTitle(movieDto.title()) != null){
             throw new MovieAlreadyException(movieDto.title());
         }
 
         MovieEntity movieEntity = movieMapper.toEntity(movieDto);
-        movieEntity.setEstado("D");
+        movieEntity.setStatus("D");
         MovieDto savedMovie = this.movieMapper.toDto(crudMovieEntity.save(movieEntity));
         return enrichMovieWithReviewData(savedMovie);
     }
 
     @Override
     public MovieDto update(Long id, UpdateMovieDto updateMovieDto) {
-        // 1. Verificar que la película existe
         MovieEntity movieEntity = crudMovieEntity.findById(id).orElse(null);
         if (movieEntity == null) {
             throw new MovieNotFoundException(id);
         }
 
-        // 2. Si se está actualizando el título, verificar que no exista otra película con el mismo título
-        if (updateMovieDto.title() != null && !updateMovieDto.title().equals(movieEntity.getTitulo())) {
-            MovieEntity existingMovie = crudMovieEntity.findFirstByTitulo(updateMovieDto.title());
+        if (updateMovieDto.title() != null && !updateMovieDto.title().equals(movieEntity.getTitle())) {
+            MovieEntity existingMovie = crudMovieEntity.findFirstByTitle(updateMovieDto.title());
             if (existingMovie != null && !existingMovie.getId().equals(id)) {
                 throw new MovieTitleAlreadyExistsException(updateMovieDto.title(), id);
             }
         }
 
-        // 3. Actualizar la entidad
         this.movieMapper.updateEntityFromDto(updateMovieDto, movieEntity);
 
         MovieDto updatedMovie = this.movieMapper.toDto(this.crudMovieEntity.save(movieEntity));
@@ -108,7 +122,6 @@ public class MovieEntityRepository implements MovieRepository {
 
     @Override
     public void delete(Long id) {
-        // Verificar que la película existe antes de eliminar
         MovieEntity movieEntity = crudMovieEntity.findById(id).orElse(null);
         if (movieEntity == null) {
             throw new MovieNotFoundException(id);
