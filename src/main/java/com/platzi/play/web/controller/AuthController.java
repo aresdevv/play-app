@@ -3,14 +3,20 @@ package com.platzi.play.web.controller;
 import com.platzi.play.domain.dto.AuthResponseDto;
 import com.platzi.play.domain.dto.LoginDto;
 import com.platzi.play.domain.dto.RegisterDto;
+import com.platzi.play.domain.dto.UserDto;
 import com.platzi.play.domain.service.AuthService;
+import com.platzi.play.domain.service.UserService;
+import com.platzi.play.persistence.entity.UserEntity;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import io.swagger.v3.oas.annotations.security.SecurityRequirement;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -19,9 +25,11 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final UserService userService;
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, UserService userService) {
         this.authService = authService;
+        this.userService = userService;
     }
 
     @PostMapping("/register")
@@ -65,14 +73,18 @@ public class AuthController {
     @GetMapping("/me")
     @Operation(
             summary = "Obtener información del usuario actual",
-            description = "Retorna la información del usuario autenticado"
+            description = "Retorna la información del usuario autenticado",
+            security = @SecurityRequirement(name = "bearerAuth")
     )
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Información del usuario obtenida"),
-            @ApiResponse(responseCode = "401", description = "No autorizado")
+            @ApiResponse(responseCode = "401", description = "No autorizado", content = @Content)
     })
-    public ResponseEntity<String> getCurrentUser() {
-        // Este endpoint será implementado cuando configuremos Spring Security
-        return ResponseEntity.ok("Endpoint de usuario actual - pendiente de implementación");
+    public ResponseEntity<UserDto> getCurrentUser(@AuthenticationPrincipal UserEntity user) {
+        if (user == null) {
+            return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        }
+        UserDto userDto = userService.getCurrentUser(user.getUsername());
+        return ResponseEntity.ok(userDto);
     }
 }

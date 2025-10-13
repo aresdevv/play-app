@@ -17,7 +17,7 @@ public interface ReviewMapper {
             @Mapping(source = "user.id", target = "userId"),
             @Mapping(source = "user.username", target = "username"),
             @Mapping(source = "movie.id", target = "movieId"),
-            @Mapping(source = "movie.titulo", target = "movieTitle"),
+            @Mapping(source = "movie.title", target = "movieTitle"),
             @Mapping(source = "rating", target = "rating"),
             @Mapping(source = "comment", target = "comment"),
             @Mapping(source = "createdAt", target = "createdAt"),
