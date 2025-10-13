@@ -115,21 +115,41 @@
             return ResponseEntity.ok(this.movieService.update(id,movieDto));
         }
 
-        @DeleteMapping("/{id}")
-        @Operation(
-                summary = "Eliminar una película",
-                description = "Elimina una película del sistema por su identificador",
-                responses = {
-                        @ApiResponse(responseCode = "204", description = "Película eliminada exitosamente"),
-                        @ApiResponse(responseCode = "404", description = "Película no encontrada", content = @Content)
-                }
-        )
-        public ResponseEntity<Void> delete(
-                @Parameter(description = "Identificador de la película a eliminar", example = "1")
-                @PathVariable Long id){
-            this.movieService.delete(id);
-            return ResponseEntity.noContent().build();
-        }
-
-
+    @DeleteMapping("/{id}")
+    @Operation(
+            summary = "Eliminar una película",
+            description = "Elimina una película del sistema por su identificador",
+            responses = {
+                    @ApiResponse(responseCode = "204", description = "Película eliminada exitosamente"),
+                    @ApiResponse(responseCode = "404", description = "Película no encontrada", content = @Content)
+            }
+    )
+    public ResponseEntity<Void> delete(
+            @Parameter(description = "Identificador de la película a eliminar", example = "1")
+            @PathVariable Long id){
+        this.movieService.delete(id);
+        return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/import-from-tmdb/{tmdbId}")
+    @Operation(
+            summary = "Importar película desde TMDB",
+            description = "Importa una película desde The Movie Database a la base de datos local. " +
+                    "Si la película ya existe, retorna la existente. " +
+                    "Esto permite hacer reviews sobre películas de TMDB sin crearlas manualmente.",
+            responses = {
+                    @ApiResponse(responseCode = "201", description = "Película importada exitosamente"),
+                    @ApiResponse(responseCode = "200", description = "Película ya existía, se retorna la existente"),
+                    @ApiResponse(responseCode = "404", description = "Película no encontrada en TMDB", content = @Content),
+                    @ApiResponse(responseCode = "400", description = "ID de TMDB inválido", content = @Content)
+            }
+    )
+    public ResponseEntity<MovieDto> importFromTmdb(
+            @Parameter(description = "ID de la película en TMDB", example = "603")
+            @PathVariable Long tmdbId) {
+        MovieDto importedMovie = this.movieService.importFromTmdb(tmdbId);
+        return ResponseEntity.status(HttpStatus.CREATED).body(importedMovie);
+    }
+
+
+}

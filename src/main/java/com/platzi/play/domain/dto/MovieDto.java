@@ -42,6 +42,35 @@ public record MovieDto(
         Double averageUserRating,
         
         @Schema(description = "Cantidad total de reviews de usuarios", example = "150")
-        Long reviewCount
+        Long reviewCount,
+        
+        // ========== Campos de integración con TMDB ==========
+        
+        @Schema(description = "ID de la película en TMDB (si fue importada)", example = "603")
+        Long tmdbId,
+        
+        @Schema(description = "URL del poster de la película", example = "https://image.tmdb.org/t/p/w500/...")
+        String posterUrl,
+        
+        @Schema(description = "URL del backdrop de la película", example = "https://image.tmdb.org/t/p/original/...")
+        String backdropUrl,
+        
+        @Schema(description = "Sinopsis de la película")
+        String overview,
+        
+        @Schema(description = "Título original de la película", example = "The Godfather")
+        String originalTitle,
+        
+        @Schema(description = "Calificación promedio en TMDB (0-10)", example = "8.7")
+        Double voteAverage,
+        
+        @Schema(description = "Cantidad de votos en TMDB", example = "25000")
+        Integer voteCount,
+        
+        @Schema(description = "Popularidad en TMDB", example = "65.23")
+        Double popularity,
+        
+        @Schema(description = "Idioma original de la película", example = "en")
+        String originalLanguage
 ) {
 }

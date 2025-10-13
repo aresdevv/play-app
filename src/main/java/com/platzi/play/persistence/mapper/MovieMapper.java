@@ -13,22 +13,31 @@ import java.util.List;
 @Mapper(componentModel = "spring", uses = {GenreMapper.class, StateMapper.class})
 public interface MovieMapper {
 
-    @Mapping(source = "titulo", target = "title")
-    @Mapping(source = "duracion", target = "duration")
-    @Mapping(source = "genero", target = "genre", qualifiedByName = "stringToGenre"                 )
-    @Mapping(source = "fechaEstreno", target = "releaseDate")
-    @Mapping(source = "clasificacion", target = "rating")
-    @Mapping(source = "estado", target = "available", qualifiedByName = "stateToBoolean")
+    @Mapping(source = "title", target = "title")
+    @Mapping(source = "duration", target = "duration")
+    @Mapping(source = "genre", target = "genre", qualifiedByName = "stringToGenre")
+    @Mapping(source = "releaseDate", target = "releaseDate")
+    @Mapping(source = "rating", target = "rating")
+    @Mapping(source = "status", target = "available", qualifiedByName = "stateToBoolean")
+    @Mapping(source = "tmdbId", target = "tmdbId")
+    @Mapping(source = "posterUrl", target = "posterUrl")
+    @Mapping(source = "backdropUrl", target = "backdropUrl")
+    @Mapping(source = "overview", target = "overview")
+    @Mapping(source = "originalTitle", target = "originalTitle")
+    @Mapping(source = "voteAverage", target = "voteAverage")
+    @Mapping(source = "voteCount", target = "voteCount")
+    @Mapping(source = "popularity", target = "popularity")
+    @Mapping(source = "originalLanguage", target = "originalLanguage")
     MovieDto toDto(MovieEntity entity);
     List<MovieDto> toDtoList(List<MovieEntity> entities);
 
     @InheritInverseConfiguration
-    @Mapping(source="genre" ,target = "genero", qualifiedByName = "genreToString")
-    @Mapping(source="available", target = "estado", qualifiedByName = "booleanToState")
+    @Mapping(source="genre", target = "genre", qualifiedByName = "genreToString")
+    @Mapping(source="available", target = "status", qualifiedByName = "booleanToState")
     MovieEntity toEntity(MovieDto dto);
 
-    @Mapping(target = "titulo",source = "title")
-    @Mapping(target = "fechaEstreno", source = "releaseDate")
-    @Mapping(target = "clasificacion", source = "rating")
-    void updateEntityFromDto(UpdateMovieDto updateMovieDto,@MappingTarget MovieEntity entity);
+    @Mapping(target = "title", source = "title")
+    @Mapping(target = "releaseDate", source = "releaseDate")
+    @Mapping(target = "rating", source = "rating")
+    void updateEntityFromDto(UpdateMovieDto updateMovieDto, @MappingTarget MovieEntity entity);
 }

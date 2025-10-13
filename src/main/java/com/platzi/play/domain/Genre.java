@@ -6,5 +6,13 @@ public enum Genre {
     DRAMA,
     ANIMATED,
     HORROR,
-    SCI_FI
+    SCI_FI,
+    THRILLER,
+    ROMANCE,
+    ADVENTURE,
+    FANTASY,
+    MYSTERY,
+    CRIME,
+    DOCUMENTARY,
+    OTHER
 }
